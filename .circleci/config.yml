@@ -1,9 +1,22 @@
 version: 2.1
 description: Test CCI conditionals
 
+commands:
+  do_release:
+    steps:
+      - run:
+          name: Do actual release thing 1
+          working_directory: ./cliv2
+          command: |
+            echo "Do actual release thing 1"
+      - run:
+          name: Do actual release thing 2
+          working_directory: ./cliv2
+          command: |
+            echo "Do actual release thing 2"
 
 jobs:
-  test_stuff:
+  test:
     machine:
       image: ubuntu-2204:2022.07.1
     working_directory: /home/circleci/test_cci_conditionals
@@ -18,7 +31,30 @@ jobs:
           name: Hello 2
           command: echo "hello 2"
 
+  deploy:
+    machine:
+      image: ubuntu-2204:2022.07.1
+    working_directory: /home/circleci/test_cci_conditionals
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      
+      # the "real work of the release is done here
+      # Then when condition can look at a pipeline parameter
+      - when:
+          condition: false
+          steps:
+            - do_release
+
 workflows:
-  build-test-deploy:
+  build:
     jobs:
-      - test_stuff
+      - test
+      - deploy:
+          requires:
+            - test
+          filters:
+            branches:
+              only:
+                - main
