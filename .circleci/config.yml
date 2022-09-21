@@ -1,0 +1,24 @@
+version: 2.1
+description: Test CCI conditionals
+
+
+jobs:
+  test_stuff:
+    machine:
+      image: ubuntu-2204:2022.07.1
+    working_directory: /home/circleci/test_cci_conditionals
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - run:
+          name: Hello 1
+          command: echo "hello 1"
+      - run:
+          name: Hello 2
+          command: echo "hello 2"
+
+workflows:
+  build-test-deploy:
+    jobs:
+      - test_stuff
