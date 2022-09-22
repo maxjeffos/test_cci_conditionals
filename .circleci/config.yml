@@ -28,7 +28,7 @@ jobs:
           name: Do testing stuff
           command: echo "Doing testing"
 
-  deploy:
+  release:
     machine:
       image: ubuntu-2204:2022.07.1
     working_directory: /home/circleci/test_cci_conditionals
@@ -36,6 +36,11 @@ jobs:
       - checkout
       - attach_workspace:
           at: .
+
+      - run:
+          name: Do a thing
+          command: echo "Doing a thing directly in the release job"
+
       
       # the "real work of the release is done here
       # Then when condition can look at a pipeline parameter
@@ -52,7 +57,7 @@ workflows:
   build:
     jobs:
       - test
-      - deploy:
+      - release:
           requires:
             - test
           filters:
