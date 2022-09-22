@@ -25,11 +25,8 @@ jobs:
       - attach_workspace:
           at: .
       - run:
-          name: Hello 1
-          command: echo "hello 1"
-      - run:
-          name: Hello 2
-          command: echo "hello 2"
+          name: Do testing stuff
+          command: echo "Doing testing"
 
   deploy:
     machine:
@@ -42,8 +39,10 @@ jobs:
       
       # the "real work of the release is done here
       # Then when condition can look at a pipeline parameter
+      # equal: [ "my-scheduled-release", << pipeline.schedule.name >> ]   # `my-scheduled-release` is the name I gave to the scheduled pipeline trigger
       - when:
-          condition: false
+          condition:
+            equal: [ scheduled_pipeline, << pipeline.trigger_source >> ]  # these are built-in names
           steps:
             - do_release
 
