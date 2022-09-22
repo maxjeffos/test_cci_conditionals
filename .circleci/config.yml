@@ -42,7 +42,9 @@ jobs:
       # equal: [ "my-scheduled-release", << pipeline.schedule.name >> ]   # `my-scheduled-release` is the name I gave to the scheduled pipeline trigger
       - when:
           condition:
-            equal: [ scheduled_pipeline, << pipeline.trigger_source >> ]  # these are built-in names
+            and:
+              - equal: [ scheduled_pipeline, << pipeline.trigger_source >> ]  # these are built-in names
+              - equal: [ "my-scheduled-release", << pipeline.schedule.name >> ]
           steps:
             - do_release
 
