@@ -36,22 +36,56 @@ jobs:
       - checkout
       - attach_workspace:
           at: .
-
+      - run: 
+          name: Show parameter values
+          command: |
+            echo << pipeline.git.revision >>
+            echo << pipeline.schedule.name >>
+            echo << pipeline.trigger_source >>
       - run:
           name: Do a thing
           command: echo "Doing a thing directly in the release job"
-
+      - run:
+          name: Make sure that this is the release scheduled pipeline or manually invoked
+          command: |
+            if [ << pipeline.trigger_source >> == "scheduled_pipeline" ]; then
+              echo "This is a scheduled pipeline."
+              
+              # Now make sure it's the specific scheduled pipeline we want (i.e. `my-scheduled-release`)
+              if [ << pipeline.schedule.name >> != "my-scheduled-release" ]; then
+                echo "Early stop because this is a scheduled pipeline but the release one"
+                circleci-agent step halt
+              else
+                echo "This the release scheduled pipeline that we want. Continuing."
+              fi
+            elif [ << pipeline.trigger_source >> == "api" ]; then  # this will be the case when it is manually invoked
+              echo "This workflow run has been manually invoked. Continuing."
+            else
+              echo "Early stop because this workflow run is not a scheduled pipeline"
+              circleci-agent step halt
+            fi
+      # - run:
+      #     name: Make sure it is the specific scheduled pipeline trigger for release
+      #     command: |
+      #       if [ << pipeline.schedule.name >> != "my-scheduled-release" ]; then
+      #         echo "Early stop because this workflow run was not triggered by the schedule"
+      #         circleci-agent step halt
+      #       fi
+      - run:
+          name: Real Release Stuff
+          command: echo "Doing the actual release stuff that we only want to do for a real release"
+      - do_release
       
       # the "real work of the release is done here
       # Then when condition can look at a pipeline parameter
-      # equal: [ "my-scheduled-release", << pipeline.schedule.name >> ]   # `my-scheduled-release` is the name I gave to the scheduled pipeline trigger
-      - when:
-          condition:
-            and:
-              - equal: [ scheduled_pipeline, << pipeline.trigger_source >> ]  # these are built-in names
-              - equal: [ "my-scheduled-release", << pipeline.schedule.name >> ]
-          steps:
-            - do_release
+      # The following also works, but I think is not as nice as the early stop method above
+      # - when:
+      #     condition:
+      #       and:
+      #         - equal: [ scheduled_pipeline, << pipeline.trigger_source >> ]  # these are built-in names
+      #         - equal: [ "my-scheduled-release", << pipeline.schedule.name >> ]
+      #     steps:
+      #       - do_release
 
 workflows:
   build:
