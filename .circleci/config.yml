@@ -36,6 +36,10 @@ jobs:
       - checkout
       - attach_workspace:
           at: .
+      - run:
+          name: Check if HEAD is tagged
+          command: |
+            git describe --exact-match --tags HEAD
       - run: 
           name: Show parameter values
           command: |
@@ -50,7 +54,7 @@ jobs:
           command: |
             if [ << pipeline.trigger_source >> == "scheduled_pipeline" ]; then
               echo "This is a scheduled pipeline."
-              
+
               # Now make sure it's the specific scheduled pipeline we want (i.e. `my-scheduled-release`)
               if [ << pipeline.schedule.name >> != "my-scheduled-release" ]; then
                 echo "Early stop because this is a scheduled pipeline but the release one"
