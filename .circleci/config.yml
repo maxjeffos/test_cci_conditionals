@@ -39,7 +39,19 @@ jobs:
       - run:
           name: Check if HEAD is tagged
           command: |
-            git describe --exact-match --tags HEAD
+            git describe --exact-match --tags HEAD || true
+            git describe --exact-match --tags HEAD > tag_check_stdout || true
+            ls -la
+            if [ -s tag_check_stdout ]; then
+              # tag_check_stdout file is non-empty meaning HEAD has been tagged
+              echo "HEAD has a tag implying it has already been released... stopping release job early to not release again."
+              circleci-agent step halt
+            else
+              # tag_check_stdout file is empty meaning HEAD has not been tagged
+              echo "HEAD has no tags... continuing with release job."
+              rm ./tag_check_stdout
+              ls -la
+            fi
       - run: 
           name: Show parameter values
           command: |
