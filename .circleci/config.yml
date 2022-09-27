@@ -28,7 +28,7 @@ jobs:
           name: Do testing stuff
           command: echo "Doing testing"
 
-  release:
+  check_release:
     machine:
       image: ubuntu-2204:2022.07.1
     working_directory: /home/circleci/test_cci_conditionals
@@ -103,13 +103,42 @@ jobs:
       #     steps:
       #       - do_release
 
+  actual_release:
+    machine:
+      image: ubuntu-2204:2022.07.1
+    working_directory: /home/circleci/test_cci_conditionals
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      # the "real work of the release is done here
+      # Then when condition can look at a pipeline parameter
+      # The following also works, but I think is not as nice as the early stop method above
+      - when:
+          condition:
+            and:
+              - equal: [ scheduled_pipeline, << pipeline.trigger_source >> ]  # these are built-in names
+              - equal: [ "my-scheduled-release", << pipeline.schedule.name >> ]
+          steps:
+            - do_release
+            - run:
+                name: Real Release Stuff
+                command: echo "Doing the actual release stuff that we only want to do for a real release."
+
 workflows:
   build:
     jobs:
       - test
-      - release:
+      - check_release:
           requires:
             - test
+          filters:
+            branches:
+              only:
+                - main
+      - actual_release:
+          requires:
+            - check_release
           filters:
             branches:
               only:
