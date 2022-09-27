@@ -125,21 +125,33 @@ jobs:
                 name: Real Release Stuff
                 command: echo "Doing the actual release stuff that we only want to do for a real release."
 
+BuildAndTestJobs: &buildAndTestJobs
+  - test
+  - check_release:
+      requires:
+        - test
+      filters:
+        branches:
+          only:
+            - main
+
+ReleaseJob: &releaseJob
+  - actual_release:
+      requires:
+        - check_release
+      filters:
+        branches:
+          only:
+            - main
+
 workflows:
-  build:
+  build_test:
     jobs:
-      - test
-      - check_release:
-          requires:
-            - test
-          filters:
-            branches:
-              only:
-                - main
-      - actual_release:
-          requires:
-            - check_release
-          filters:
-            branches:
-              only:
-                - main
+      *buildAndTestJobs
+
+  build_test_release:
+    jobs:
+      *buildAndTestJobs
+      *releaseJob
+      # [*buildAndTestJobs, *releaseJob]
+      # <<: *buildAndTestJobs, *releaseJob
